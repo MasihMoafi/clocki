@@ -1,0 +1,1 @@
+/home/masih/Desktop/p/skills/dev/AGENTS.md

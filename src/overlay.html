@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>clocki</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 66px;
+      height: 24px;
+      background: #000A0E;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: default;
+    }
+
+    .container {
+      width: 66px;
+      height: 24px;
+      background: #000A0E;
+      border: 1px solid rgba(0, 255, 220, 0.3);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: border-color 0.3s ease;
+    }
+
+    .container.running {
+      border-color: rgba(0, 255, 220, 0.65);
+      box-shadow: 0 0 6px rgba(0, 255, 200, 0.2), inset 0 0 10px rgba(0, 255, 200, 0.05);
+    }
+
+    .container.paused { border-color: rgba(0, 180, 160, 0.25); }
+
+    .time {
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      font-size: 13px;
+      color: #00ffe0;
+      letter-spacing: 1px;
+      text-shadow: 0 0 5px rgba(0, 255, 224, 0.85), 0 0 12px rgba(0, 255, 224, 0.35);
+      line-height: 1;
+    }
+
+    .paused .time {
+      color: #007a6b;
+      text-shadow: 0 0 3px rgba(0, 122, 107, 0.5);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* Scanlines */
+    .container::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container paused" id="container">
+    <span class="time" id="time">0.00h</span>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const container = document.getElementById('container');
+    const timeEl    = document.getElementById('time');
+
+    let running = false;
+    let baseTotalMs = 0;
+    let sessionStart = null;
+    let rafId = null;
+
+    function formatHours(ms) {
+      return (ms / 3_600_000).toFixed(2) + 'h';
+    }
+    function tick() {
+      const live = sessionStart !== null ? (Date.now() - sessionStart) : 0;
+      timeEl.textContent = formatHours(baseTotalMs + live);
+      if (running) rafId = requestAnimationFrame(tick);
+    }
+
+    ipcRenderer.on('state-update', (_, data) => {
+      running = data.running;
+      baseTotalMs = data.totalMs;
+      sessionStart = running ? Date.now() : null;
+      container.className = 'container ' + (running ? 'running' : 'paused');
+      if (rafId) cancelAnimationFrame(rafId);
+      tick();
+    });
+
+    // ── Drag vs Click vs Right-Click Hide ──────────────────────────
+    let mouseDownAt = null;
+    let startX = 0, startY = 0;
+    let hasDragged = false;
+
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      mouseDownAt = Date.now();
+      startX = e.screenX;
+      startY = e.screenY;
+      hasDragged = false;
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (mouseDownAt === null) return;
+      const dx = e.screenX - startX;
+      const dy = e.screenY - startY;
+      if (!hasDragged && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      hasDragged = true;
+      ipcRenderer.send('drag-move', { dx, dy });
+      startX = e.screenX;
+      startY = e.screenY;
+    });
+
+    let clickTimer = null;
+
+    document.addEventListener('mouseup', (e) => {
+      if (mouseDownAt !== null && !hasDragged) {
+        if (e.button === 2) {
+          ipcRenderer.send('hide'); // Right click hides overlay
+        } else if (e.button === 0) {
+          if (clickTimer === null) {
+            clickTimer = setTimeout(() => {
+              ipcRenderer.send('toggle');
+              clickTimer = null;
+            }, 250);
+          }
+        }
+      }
+      mouseDownAt = null;
+    });
+
+    document.addEventListener('dblclick', (e) => {
+      if (clickTimer !== null) {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+      }
+      ipcRenderer.send('reset');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        ipcRenderer.send('reset');
+      }
+    });
+
+    ipcRenderer.send('get-state');
+    setInterval(() => ipcRenderer.send('get-state'), 60_000);
+  </script>
+</body>
+</html>
