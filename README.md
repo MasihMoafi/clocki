@@ -2,6 +2,12 @@
 
 > A minimalist, frameless desktop floating timer overlay for tracking daily focus hours.
 
+![Clocki Banner](assets/banner.jpg)
+
+<p align="center">
+  <img src="assets/preview.png" alt="Clocki UI Overlay" width="200" />
+</p>
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
 ![Electron](https://img.shields.io/badge/Electron-47848F?style=flat&logo=electron&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
