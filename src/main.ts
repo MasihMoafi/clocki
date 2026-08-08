@@ -109,6 +109,7 @@ if (!gotTheLock) {
     const { workArea } = screen.getPrimaryDisplay();
 
     win = new BrowserWindow({
+      icon: path.join(__dirname, "../assets/icon.png"),
       width: 66,
       height: 24,
       x: 0,
@@ -118,7 +119,7 @@ if (!gotTheLock) {
       backgroundColor: '#000A0E',
       alwaysOnTop: true,
       resizable: false,
-      skipTaskbar: true,
+      skipTaskbar: false,
       hasShadow: false,
       webPreferences: {
         nodeIntegration: true,
