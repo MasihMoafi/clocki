@@ -10,7 +10,11 @@
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
 ![Electron](https://img.shields.io/badge/Electron-47848F?style=flat&logo=electron&logoColor=white)
+[![Snap Store](https://snapcraft.io/clocki/badge.svg)](https://snapcraft.io/clocki)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
+
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/clocki)
+
 
 ---
 
