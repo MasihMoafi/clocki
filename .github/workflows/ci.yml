@@ -22,10 +22,11 @@ jobs:
           path: release/*.snap
       - name: Publish to Snap Store
         if: github.ref == 'refs/heads/main'
-        uses: canonical/snapcraft-action@v1
+        uses: canonical/action-publish@v1
         with:
-          snap: release/*.snap
+          snap: release/clocki_1.1.0_amd64.snap
           release: stable
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+
 
