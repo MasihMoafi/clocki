@@ -19,15 +19,13 @@ linux:
   synopsis: Minimal floating focus timer
   description: A tiny always-on-top timer overlay for tracking daily focus hours.
   executableName: clocki
-  desktop:
-    entry:
-      Name: Clocki
-      Comment: Minimal floating focus timer
-      Categories: Utility;
-      Terminal: false
 
-snapcraft:
-  base: core22
-  core22:
-    confinement: strict
-    allowNativeWayland: true
+snap:
+  confinement: strict
+  grade: stable
+
+
+
+
+
+
