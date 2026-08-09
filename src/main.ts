@@ -19,16 +19,22 @@ interface Session {
   end: number | null;
 }
 
-interface WindowPosition {
+export type Theme = "deusex" | "cyan" | "red" | "purple" | "bw";
+
+interface WindowState {
   x: number;
   y: number;
+  width?: number;
+  height?: number;
 }
 
 interface State {
   date: string;
   sessions: Session[];
-  window?: WindowPosition;
+  window?: WindowState;
+  theme?: Theme;
 }
+
 
 const LEGACY_STATE_FILE = path.join(
   os.homedir(),
@@ -115,12 +121,14 @@ function broadcastState(): void {
     win.webContents.send("state-update", {
       running: isRunning(state),
       totalMs: totalMs(state),
+      theme: state.theme || "deusex",
     });
   }
 }
 
-function visiblePosition(position?: WindowPosition): WindowPosition {
-  if (!position) return { x: 0, y: 0 };
+function visiblePosition(position?: WindowState): WindowState {
+  const defaultSize = { width: 90, height: 32 };
+  if (!position) return { x: 0, y: 0, ...defaultSize };
 
   const visible = screen.getAllDisplays().some(({ workArea }) => {
     return (
@@ -131,11 +139,21 @@ function visiblePosition(position?: WindowPosition): WindowPosition {
     );
   });
 
-  return visible ? position : { x: 0, y: 0 };
+  return visible
+    ? { ...defaultSize, ...position }
+    : { x: 0, y: 0, ...defaultSize };
 }
 
 function showContextMenu(): void {
   if (!win) return;
+
+  const themes: { id: Theme; label: string }[] = [
+    { id: "deusex", label: "Deus Ex (Gold/Amber)" },
+    { id: "cyan", label: "Cyber Cyan" },
+    { id: "red", label: "Dark Red" },
+    { id: "purple", label: "Neon Purple" },
+    { id: "bw", label: "Monochrome B&W" },
+  ];
 
   const menu = Menu.buildFromTemplate([
     {
@@ -151,6 +169,20 @@ function showContextMenu(): void {
         state = resetTimer(state);
         broadcastState();
       },
+    },
+    { type: "separator" },
+    {
+      label: "Color Theme",
+      submenu: themes.map((t) => ({
+        label: t.label,
+        type: "radio",
+        checked: (state.theme || "deusex") === t.id,
+        click: () => {
+          state.theme = t.id;
+          saveState(state);
+          broadcastState();
+        },
+      })),
     },
     { type: "separator" },
     { label: "Hide", click: () => win?.hide() },
@@ -181,21 +213,23 @@ if (!gotTheLock) {
   }
 
   app.whenReady().then(() => {
-    const position = visiblePosition(state.window);
+    const windowState = visiblePosition(state.window);
 
     win = new BrowserWindow({
       icon: path.join(__dirname, "../assets/icon.png"),
-      width: 66,
-      height: 24,
-      x: position.x,
-      y: position.y,
+      width: windowState.width || 90,
+      height: windowState.height || 32,
+      minWidth: 60,
+      minHeight: 22,
+      x: windowState.x,
+      y: windowState.y,
       frame: false,
       transparent: false,
-      backgroundColor: "#000A0E",
+      backgroundColor: "#08080A",
       alwaysOnTop: true,
-      resizable: false,
+      resizable: true,
       skipTaskbar: false,
-      hasShadow: false,
+      hasShadow: true,
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
         nodeIntegration: false,
@@ -206,16 +240,30 @@ if (!gotTheLock) {
 
     win.setAlwaysOnTop(true, "screen-saver");
 
+    win.on("resize", () => {
+      if (!win) return;
+      const [width, height] = win.getSize();
+      const [x, y] = win.getPosition();
+      state.window = { x, y, width, height };
+      saveState(state);
+    });
+
     ipcMain.on("drag-move", (_, { dx, dy }: { dx: number; dy: number }) => {
       if (!win) return;
       const [x, y] = win.getPosition();
       win.setPosition(x + dx, y + dy);
       const [newX, newY] = win.getPosition();
-      state.window = { x: newX, y: newY };
+      const [width, height] = win.getSize();
+      state.window = { x: newX, y: newY, width, height };
     });
 
     ipcMain.on("drag-end", () => saveState(state));
     ipcMain.on("hide", () => win?.hide());
+    ipcMain.on("set-theme", (_, theme: Theme) => {
+      state.theme = theme;
+      saveState(state);
+      broadcastState();
+    });
     ipcMain.on("context-menu", showContextMenu);
 
     win.on("closed", () => {
@@ -267,4 +315,5 @@ if (!gotTheLock) {
     app.quit();
   });
 }
+
 
