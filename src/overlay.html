@@ -23,8 +23,8 @@
       --border-accent: #ffb400;
       --text-glow: #ffc800;
       --text-dim: #7a5800;
-      --shadow-glow: rgba(255, 180, 0, 0.35);
-      --scanline: rgba(255, 180, 0, 0.08);
+      --shadow-glow: rgba(255, 180, 0, 0.45);
+      --scanline: rgba(255, 180, 0, 0.07);
     }
 
     body.theme-cyan {
@@ -32,8 +32,8 @@
       --border-accent: #00ffe0;
       --text-glow: #00ffe0;
       --text-dim: #007a6b;
-      --shadow-glow: rgba(0, 255, 224, 0.35);
-      --scanline: rgba(0, 255, 224, 0.08);
+      --shadow-glow: rgba(0, 255, 224, 0.45);
+      --scanline: rgba(0, 255, 224, 0.07);
     }
 
     body.theme-red {
@@ -41,8 +41,8 @@
       --border-accent: #ff2a2a;
       --text-glow: #ff4444;
       --text-dim: #7a1414;
-      --shadow-glow: rgba(255, 42, 42, 0.35);
-      --scanline: rgba(255, 42, 42, 0.08);
+      --shadow-glow: rgba(255, 42, 42, 0.45);
+      --scanline: rgba(255, 42, 42, 0.07);
     }
 
     body.theme-purple {
@@ -50,8 +50,8 @@
       --border-accent: #bf00ff;
       --text-glow: #d440ff;
       --text-dim: #5c007a;
-      --shadow-glow: rgba(191, 0, 255, 0.35);
-      --scanline: rgba(191, 0, 255, 0.08);
+      --shadow-glow: rgba(191, 0, 255, 0.45);
+      --scanline: rgba(191, 0, 255, 0.07);
     }
 
     body.theme-bw {
@@ -59,7 +59,7 @@
       --border-accent: #ffffff;
       --text-glow: #ffffff;
       --text-dim: #666666;
-      --shadow-glow: rgba(255, 255, 255, 0.25);
+      --shadow-glow: rgba(255, 255, 255, 0.35);
       --scanline: rgba(255, 255, 255, 0.05);
     }
 
@@ -68,42 +68,69 @@
       height: 100%;
       background: var(--bg);
       border: 1px solid var(--border-accent);
-      border-radius: 4px;
+      clip-path: polygon(
+        8px 0, calc(100% - 8px) 0, 
+        100% 8px, 100% calc(100% - 8px), 
+        calc(100% - 8px) 100%, 8px 100%, 
+        0 calc(100% - 8px), 0 8px
+      );
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
+      padding: 2px 6px;
     }
 
     .container.running {
       border-color: var(--border-accent);
-      box-shadow: 0 0 8px var(--shadow-glow), inset 0 0 12px var(--shadow-glow);
+      box-shadow: 0 0 10px var(--shadow-glow), inset 0 0 14px var(--shadow-glow);
     }
 
     .container.paused {
       border-color: var(--text-dim);
-      opacity: 0.85;
+      opacity: 0.88;
     }
 
-    /* Cyber corner cutouts */
-    .container::before {
-      content: '';
+    /* Inner Bevel Border */
+    .inner-frame {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 2px;
       border: 1px solid var(--border-accent);
-      clip-path: polygon(0 0, 6px 0, 0 6px, 0 100%, 100% 100%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+      opacity: 0.4;
+      clip-path: polygon(
+        6px 0, calc(100% - 6px) 0, 
+        100% 6px, 100% calc(100% - 6px), 
+        calc(100% - 6px) 100%, 6px 100%, 
+        0 calc(100% - 6px), 0 6px
+      );
       pointer-events: none;
-      opacity: 0.6;
+    }
+
+    /* Status dot indicator */
+    .status-dot {
+      position: absolute;
+      top: 3px;
+      right: 6px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--border-accent);
+      box-shadow: 0 0 5px var(--text-glow);
+      display: none;
+    }
+
+    body.large-view .status-dot {
+      display: block;
     }
 
     .time {
       font-family: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
-      font-size: clamp(11px, 45vh, 48px);
+      font-size: clamp(10px, 42vh, 48px);
       font-weight: 700;
       color: var(--text-glow);
-      letter-spacing: 1.5px;
+      letter-spacing: 1px;
       text-shadow: 0 0 6px var(--shadow-glow), 0 0 14px var(--shadow-glow);
       line-height: 1;
       white-space: nowrap;
@@ -129,19 +156,13 @@
         var(--scanline) 2px, var(--scanline) 4px
       );
       pointer-events: none;
-      border-radius: 4px;
-    }
-
-    /* Edge Resize Handles (-webkit-app-region is omitted to allow native window edge drag/resize) */
-    .resize-handle {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
     }
   </style>
 </head>
 <body class="theme-deusex">
   <div class="container paused" id="container">
+    <div class="inner-frame"></div>
+    <div class="status-dot"></div>
     <div class="scanline"></div>
     <span class="time" id="time">0.00h</span>
   </div>
@@ -154,26 +175,54 @@
     let baseTotalMs = 0;
     let sessionStart = null;
     let ticker = null;
+    let currentMode = 'timer';
 
     function formatHours(ms) {
       return (ms / 3_600_000).toFixed(2) + 'h';
     }
 
+    function formatRealTimeClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
     function renderTime() {
-      const live = sessionStart !== null ? Date.now() - sessionStart : 0;
-      timeEl.textContent = formatHours(baseTotalMs + live);
+      if (currentMode === 'clock' && document.body.classList.contains('large-view')) {
+        timeEl.textContent = formatRealTimeClock();
+      } else {
+        const live = sessionStart !== null ? Date.now() - sessionStart : 0;
+        timeEl.textContent = formatHours(baseTotalMs + live);
+      }
     }
 
     function restartTicker() {
       if (ticker !== null) clearInterval(ticker);
-      ticker = running ? setInterval(renderTime, 1000) : null;
+      ticker = setInterval(renderTime, 1000);
     }
+
+    function checkSizeClass() {
+      if (window.innerWidth > 120) {
+        document.body.classList.add('large-view');
+      } else {
+        document.body.classList.remove('large-view');
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      checkSizeClass();
+      renderTime();
+    });
 
     window.clocki.onStateUpdate((data) => {
       running = data.running;
       baseTotalMs = data.totalMs;
+      currentMode = data.mode || 'timer';
       sessionStart = running ? Date.now() : null;
       document.body.className = 'theme-' + (data.theme || 'deusex');
+      checkSizeClass();
       container.className = 'container ' + (running ? 'running' : 'paused');
       renderTime();
       restartTicker();
@@ -246,4 +295,5 @@
   </script>
 </body>
 </html>
+
 

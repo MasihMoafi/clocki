@@ -2,10 +2,11 @@ import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("clocki", {
   onStateUpdate: (
-    callback: (data: { running: boolean; totalMs: number; theme: string }) => void
+    callback: (data: { running: boolean; totalMs: number; theme: string; mode?: string }) => void
   ) => {
     ipcRenderer.on("state-update", (_event, data) => callback(data));
   },
+
   toggle: () => ipcRenderer.send("toggle"),
   reset: () => ipcRenderer.send("reset"),
   hide: () => ipcRenderer.send("hide"),

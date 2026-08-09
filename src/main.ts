@@ -28,12 +28,16 @@ interface WindowState {
   height?: number;
 }
 
+export type Mode = "timer" | "clock";
+
 interface State {
   date: string;
   sessions: Session[];
   window?: WindowState;
   theme?: Theme;
+  mode?: Mode;
 }
+
 
 
 const LEGACY_STATE_FILE = path.join(
@@ -122,6 +126,7 @@ function broadcastState(): void {
       running: isRunning(state),
       totalMs: totalMs(state),
       theme: state.theme || "deusex",
+      mode: state.mode || "timer",
     });
   }
 }
@@ -155,7 +160,9 @@ function showContextMenu(): void {
     { id: "bw", label: "Monochrome B&W" },
   ];
 
-  const menu = Menu.buildFromTemplate([
+  const currentWidth = win.getSize()[0];
+
+  const menuItems: Electron.MenuItemConstructorOptions[] = [
     {
       label: isRunning(state) ? "Pause" : "Resume",
       click: () => {
@@ -170,6 +177,37 @@ function showContextMenu(): void {
         broadcastState();
       },
     },
+  ];
+
+  if (currentWidth > 120) {
+    menuItems.push({
+      label: "Mode",
+      submenu: [
+        {
+          label: "Focus Timer (0.00h)",
+          type: "radio",
+          checked: (state.mode || "timer") === "timer",
+          click: () => {
+            state.mode = "timer";
+            saveState(state);
+            broadcastState();
+          },
+        },
+        {
+          label: "Real-time Clock (HH:MM:SS)",
+          type: "radio",
+          checked: state.mode === "clock",
+          click: () => {
+            state.mode = "clock";
+            saveState(state);
+            broadcastState();
+          },
+        },
+      ],
+    });
+  }
+
+  menuItems.push(
     { type: "separator" },
     {
       label: "Color Theme",
@@ -186,11 +224,13 @@ function showContextMenu(): void {
     },
     { type: "separator" },
     { label: "Hide", click: () => win?.hide() },
-    { label: "Quit", click: () => app.quit() },
-  ]);
+    { label: "Quit", click: () => app.quit() }
+  );
 
+  const menu = Menu.buildFromTemplate(menuItems);
   menu.popup({ window: win });
 }
+
 
 const gotTheLock = app.requestSingleInstanceLock();
 
