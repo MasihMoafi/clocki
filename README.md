@@ -73,10 +73,13 @@ sudo snap install --dangerous release/clocki_*.snap
 
 ## Publish to the Snap Store
 
+1. Create/sign into your Snapcraft developer account.
+2. Request the public snap name `clocki` at `https://dashboard.snapcraft.io/register-snap/`. New names may require manual review.
+3. Once the name is approved, authenticate and upload:
+
 ```bash
 sudo snap install snapcraft --classic
 snapcraft login
-snapcraft register clocki
 snapcraft upload --release=stable release/clocki_*.snap
 ```
 
