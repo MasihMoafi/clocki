@@ -15,7 +15,7 @@
     "build": "tsc",
     "start": "electron dist/main.js",
     "snap": "npm run build && npx --yes electron-builder --linux snap",
-    "reset": "node -e \"const fs=require('fs'),p=require('path'),f=require('os').homedir()+'/.local/share/clocki/state.json'; const d={date:new Date().toISOString().slice(0,10),sessions:[]}; fs.mkdirSync(path.dirname(f),{recursive:true}); fs.writeFileSync(f,JSON.stringify(d)); console.log('Reset done');\" && electron dist/main.js"
+    "reset": "electron dist/main.js --reset"
   },
   "devDependencies": {
     "electron": "^36.0.0",
