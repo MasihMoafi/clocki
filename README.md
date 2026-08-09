@@ -73,7 +73,7 @@ MIT © [Masih Moafi](https://github.com/masihmoafi)
 If you'd like to support Clocki, you can send Solana (SOL) to the public address below. Public addresses and QR codes are safe to share — never commit or share private keys.
 
 <p align="center">
-  <img src="assets/sol.png" alt="Solana QR" width="160" />
+  <img src="assets/sol.webp" alt="Solana QR" width="160" />
 </p>
 
 ```
@@ -81,4 +81,3 @@ If you'd like to support Clocki, you can send Solana (SOL) to the public address
 ```
 
 In the app: press Ctrl+Alt+S (or Command+Alt+S on macOS) or middle-click the overlay to open the QR image in your default image viewer/wallet app.
-

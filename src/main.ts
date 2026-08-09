@@ -205,7 +205,7 @@ if (!gotTheLock) {
 
     // Global hotkey: Ctrl+Alt+S → open support (sol QR / address)
     globalShortcut.register("CommandOrControl+Alt+S", () => {
-      const img = path.join(__dirname, "../assets/sol.png");
+      const img = path.join(__dirname, "../assets/sol.webp");
       // open in default image viewer or wallet (file://)
       shell.openPath(img).catch(() => {
         // fallback: open as file:// URL via external shell
@@ -223,7 +223,7 @@ if (!gotTheLock) {
 
     // IPC: open support (renderer)
     ipcMain.on('open-support', () => {
-      const img = path.join(__dirname, "../assets/sol.png");
+      const img = path.join(__dirname, "../assets/sol.webp");
       shell.openPath(img).catch(() => shell.openExternal(`file://${img}`));
     });
   });
@@ -236,4 +236,3 @@ if (!gotTheLock) {
     // keep app process alive even if window is closed/hidden
   });
 }
-
