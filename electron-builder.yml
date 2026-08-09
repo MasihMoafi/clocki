@@ -1,0 +1,33 @@
+appId: io.github.masihmoafi.clocki
+productName: Clocki
+
+directories:
+  output: release
+  buildResources: assets
+
+files:
+  - dist/**/*
+  - src/overlay.html
+  - assets/**/*
+  - package.json
+
+linux:
+  target:
+    - snap
+  icon: assets/icon.png
+  category: Utility
+  synopsis: Minimal floating focus timer
+  description: A tiny always-on-top timer overlay for tracking daily focus hours.
+  executableName: clocki
+  desktop:
+    entry:
+      Name: Clocki
+      Comment: Minimal floating focus timer
+      Categories: Utility;
+      Terminal: false
+
+snapcraft:
+  base: core22
+  core22:
+    confinement: strict
+    allowNativeWayland: true
