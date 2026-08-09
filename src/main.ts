@@ -4,6 +4,7 @@ import {
   globalShortcut,
   ipcMain,
   screen,
+  shell,
 } from "electron";
 import * as fs from "fs";
 import * as path from "path";
@@ -75,6 +76,8 @@ function totalMs(state: State): number {
     return acc + (end - s.start);
   }, 0);
 }
+
+app.disableHardwareAcceleration();
 
 let win: BrowserWindow | null = null;
 let state: State = loadState();
@@ -200,12 +203,28 @@ if (!gotTheLock) {
       });
     });
 
+    // Global hotkey: Ctrl+Alt+S → open support (sol QR / address)
+    globalShortcut.register("CommandOrControl+Alt+S", () => {
+      const img = path.join(__dirname, "../assets/sol.png");
+      // open in default image viewer or wallet (file://)
+      shell.openPath(img).catch(() => {
+        // fallback: open as file:// URL via external shell
+        shell.openExternal(`file://${img}`);
+      });
+    });
+
     // IPC: renderer requests current state
     ipcMain.on("get-state", () => {
       win?.webContents.send("state-update", {
         running: isRunning(state),
         totalMs: totalMs(state),
       });
+    });
+
+    // IPC: open support (renderer)
+    ipcMain.on('open-support', () => {
+      const img = path.join(__dirname, "../assets/sol.png");
+      shell.openPath(img).catch(() => shell.openExternal(`file://${img}`));
     });
   });
 
