@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
   <title>clocki</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
@@ -39,7 +38,7 @@
     .container.paused { border-color: rgba(0, 180, 160, 0.25); }
 
     .time {
-      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      font-family: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
       font-size: 13px;
       color: #00ffe0;
       letter-spacing: 1px;
@@ -58,7 +57,6 @@
       50%       { opacity: 0.3; }
     }
 
-    /* Scanlines */
     .container::after {
       content: '';
       position: absolute;
@@ -78,43 +76,49 @@
   </div>
 
   <script>
-    const { ipcRenderer } = require('electron');
     const container = document.getElementById('container');
-    const timeEl    = document.getElementById('time');
+    const timeEl = document.getElementById('time');
 
     let running = false;
     let baseTotalMs = 0;
     let sessionStart = null;
-    let rafId = null;
+    let ticker = null;
 
     function formatHours(ms) {
       return (ms / 3_600_000).toFixed(2) + 'h';
     }
-    function tick() {
-      const live = sessionStart !== null ? (Date.now() - sessionStart) : 0;
+
+    function renderTime() {
+      const live = sessionStart !== null ? Date.now() - sessionStart : 0;
       timeEl.textContent = formatHours(baseTotalMs + live);
-      if (running) rafId = requestAnimationFrame(tick);
     }
 
-    ipcRenderer.on('state-update', (_, data) => {
+    function restartTicker() {
+      if (ticker !== null) clearInterval(ticker);
+      ticker = running ? setInterval(renderTime, 1000) : null;
+    }
+
+    window.clocki.onStateUpdate((data) => {
       running = data.running;
       baseTotalMs = data.totalMs;
       sessionStart = running ? Date.now() : null;
       container.className = 'container ' + (running ? 'running' : 'paused');
-      if (rafId) cancelAnimationFrame(rafId);
-      tick();
+      renderTime();
+      restartTicker();
     });
 
-    // ── Drag vs Click vs Right-Click Hide ──────────────────────────
     let mouseDownAt = null;
-    let startX = 0, startY = 0;
+    let startX = 0;
+    let startY = 0;
     let hasDragged = false;
 
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
+      window.clocki.openContextMenu();
     });
 
     document.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
       mouseDownAt = Date.now();
       startX = e.screenX;
       startY = e.screenY;
@@ -128,7 +132,7 @@
       const dy = e.screenY - startY;
       if (!hasDragged && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
       hasDragged = true;
-      ipcRenderer.send('drag-move', { dx, dy });
+      window.clocki.dragMove(dx, dy);
       startX = e.screenX;
       startY = e.screenY;
     });
@@ -136,39 +140,37 @@
     let clickTimer = null;
 
     document.addEventListener('mouseup', (e) => {
-      if (mouseDownAt !== null && !hasDragged) {
-        if (e.button === 2) {
-          ipcRenderer.send('hide'); // Right click hides overlay
-        } else if (e.button === 0) {
-          if (clickTimer === null) {
-            clickTimer = setTimeout(() => {
-              ipcRenderer.send('toggle');
-              clickTimer = null;
-            }, 250);
-          }
-        }
+      if (e.button !== 0 || mouseDownAt === null) return;
+
+      if (hasDragged) {
+        window.clocki.dragEnd();
+      } else if (clickTimer === null) {
+        clickTimer = setTimeout(() => {
+          window.clocki.toggle();
+          clickTimer = null;
+        }, 250);
       }
+
       mouseDownAt = null;
     });
 
-    document.addEventListener('dblclick', (e) => {
+    document.addEventListener('dblclick', () => {
       if (clickTimer !== null) {
         clearTimeout(clickTimer);
         clickTimer = null;
       }
-      ipcRenderer.send('reset');
+      window.clocki.reset();
     });
 
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
         e.preventDefault();
-        ipcRenderer.send('reset');
+        window.clocki.reset();
       }
     });
 
-    ipcRenderer.send('get-state');
-    setInterval(() => ipcRenderer.send('get-state'), 60_000);
-
+    window.clocki.requestState();
+    setInterval(() => window.clocki.requestState(), 60_000);
   </script>
 </body>
 </html>

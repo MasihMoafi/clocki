@@ -3,13 +3,34 @@ import {
   BrowserWindow,
   globalShortcut,
   ipcMain,
+  Menu,
   screen,
 } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 
-const STATE_FILE = path.join(
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("enable-features", "GlobalShortcutsPortal");
+Menu.setApplicationMenu(null);
+
+interface Session {
+  start: number;
+  end: number | null;
+}
+
+interface WindowPosition {
+  x: number;
+  y: number;
+}
+
+interface State {
+  date: string;
+  sessions: Session[];
+  window?: WindowPosition;
+}
+
+const LEGACY_STATE_FILE = path.join(
   os.homedir(),
   ".local",
   "share",
@@ -17,15 +38,18 @@ const STATE_FILE = path.join(
   "state.json"
 );
 
-interface Session {
-  start: number;
-  end: number | null;
+function resolveStateFile(): string {
+  if (process.env.SNAP_USER_DATA) {
+    return path.join(process.env.SNAP_USER_DATA, "state.json");
+  }
+
+  const modern = path.join(app.getPath("userData"), "clocki-data", "state.json");
+  if (fs.existsSync(modern)) return modern;
+  if (fs.existsSync(LEGACY_STATE_FILE)) return LEGACY_STATE_FILE;
+  return modern;
 }
 
-interface State {
-  date: string;
-  sessions: Session[];
-}
+const STATE_FILE = resolveStateFile();
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
@@ -35,9 +59,8 @@ function loadState(): State {
   try {
     if (fs.existsSync(STATE_FILE)) {
       const raw = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) as State;
-      // auto-reset if it's a new day
       if (raw.date !== todayStr()) {
-        return { date: todayStr(), sessions: [] };
+        return { date: todayStr(), sessions: [], window: raw.window };
       }
       return raw;
     }
@@ -59,27 +82,81 @@ function isRunning(state: State): boolean {
 
 function toggleTimer(state: State): State {
   if (isRunning(state)) {
-    // pause: close the last open session
     state.sessions[state.sessions.length - 1].end = Date.now();
   } else {
-    // start/resume
     state.sessions.push({ start: Date.now(), end: null });
   }
   saveState(state);
   return state;
 }
 
+function resetTimer(state: State): State {
+  const reset: State = {
+    date: todayStr(),
+    sessions: [],
+    window: state.window,
+  };
+  saveState(reset);
+  return reset;
+}
+
 function totalMs(state: State): number {
-  return state.sessions.reduce((acc, s) => {
-    const end = s.end ?? Date.now();
-    return acc + (end - s.start);
+  return state.sessions.reduce((acc, session) => {
+    const end = session.end ?? Date.now();
+    return acc + (end - session.start);
   }, 0);
 }
 
-app.disableHardwareAcceleration();
-
 let win: BrowserWindow | null = null;
 let state: State = loadState();
+
+function broadcastState(): void {
+  win?.webContents.send("state-update", {
+    running: isRunning(state),
+    totalMs: totalMs(state),
+  });
+}
+
+function visiblePosition(position?: WindowPosition): WindowPosition {
+  if (!position) return { x: 0, y: 0 };
+
+  const visible = screen.getAllDisplays().some(({ workArea }) => {
+    return (
+      position.x >= workArea.x - 65 &&
+      position.x < workArea.x + workArea.width &&
+      position.y >= workArea.y - 23 &&
+      position.y < workArea.y + workArea.height
+    );
+  });
+
+  return visible ? position : { x: 0, y: 0 };
+}
+
+function showContextMenu(): void {
+  if (!win) return;
+
+  const menu = Menu.buildFromTemplate([
+    {
+      label: isRunning(state) ? "Pause" : "Resume",
+      click: () => {
+        state = toggleTimer(state);
+        broadcastState();
+      },
+    },
+    {
+      label: "Reset",
+      click: () => {
+        state = resetTimer(state);
+        broadcastState();
+      },
+    },
+    { type: "separator" },
+    { label: "Hide", click: () => win?.hide() },
+    { label: "Quit", click: () => app.quit() },
+  ]);
+
+  menu.popup({ window: win });
+}
 
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -88,81 +165,66 @@ if (!gotTheLock) {
 } else {
   app.on("second-instance", (_event, commandLine) => {
     if (commandLine.includes("--reset")) {
-      state = { date: todayStr(), sessions: [] };
-      saveState(state);
+      state = resetTimer(state);
     }
     if (win) {
       if (win.isMinimized()) win.restore();
       win.show();
-      win.webContents.send("state-update", {
-        running: isRunning(state),
-        totalMs: totalMs(state),
-      });
+      broadcastState();
     }
   });
 
-  // handle --reset flag on initial launch
   if (process.argv.includes("--reset")) {
-    state = { date: todayStr(), sessions: [] };
-    saveState(state);
+    state = resetTimer(state);
   }
 
   app.whenReady().then(() => {
-    const { workArea } = screen.getPrimaryDisplay();
+    const position = visiblePosition(state.window);
 
     win = new BrowserWindow({
       icon: path.join(__dirname, "../assets/icon.png"),
       width: 66,
       height: 24,
-      x: 0,
-      y: 0,
+      x: position.x,
+      y: position.y,
       frame: false,
       transparent: false,
-      backgroundColor: '#000A0E',
+      backgroundColor: "#000A0E",
       alwaysOnTop: true,
       resizable: false,
       skipTaskbar: false,
       hasShadow: false,
       webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
+        preload: path.join(__dirname, "preload.js"),
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
       },
     });
 
     win.setAlwaysOnTop(true, "screen-saver");
 
-    // JS-driven drag
-    ipcMain.on('drag-move', (_, { dx, dy }: { dx: number; dy: number }) => {
+    ipcMain.on("drag-move", (_, { dx, dy }: { dx: number; dy: number }) => {
       if (!win) return;
       const [x, y] = win.getPosition();
       win.setPosition(x + dx, y + dy);
+      const [newX, newY] = win.getPosition();
+      state.window = { x: newX, y: newY };
     });
 
-    // IPC: hide window
-    ipcMain.on('hide', () => {
-      win?.hide();
-    });
+    ipcMain.on("drag-end", () => saveState(state));
+    ipcMain.on("hide", () => win?.hide());
+    ipcMain.on("context-menu", showContextMenu);
 
     win.loadFile(path.join(__dirname, "../src/overlay.html"));
 
-    // Push initial state to renderer
-    win.webContents.on("did-finish-load", () => {
-      win?.webContents.send("state-update", {
-        running: isRunning(state),
-        totalMs: totalMs(state),
-      });
-    });
+    win.webContents.on("did-finish-load", broadcastState);
 
-    // Global hotkey: Ctrl+Alt+C → toggle timer (pause/resume)
     globalShortcut.register("CommandOrControl+Alt+C", () => {
       state = toggleTimer(state);
-      win?.webContents.send("state-update", {
-        running: isRunning(state),
-        totalMs: totalMs(state),
-      });
+      broadcastState();
     });
 
-    // Global hotkey: Ctrl+Alt+H → toggle window visibility (hide/show)
     globalShortcut.register("CommandOrControl+Alt+H", () => {
       if (!win) return;
       if (win.isVisible()) {
@@ -173,42 +235,22 @@ if (!gotTheLock) {
       }
     });
 
-    // IPC: renderer asks for toggle (click on overlay)
+    globalShortcut.register("CommandOrControl+Alt+R", () => {
+      state = resetTimer(state);
+      broadcastState();
+    });
+
     ipcMain.on("toggle", () => {
       state = toggleTimer(state);
-      win?.webContents.send("state-update", {
-        running: isRunning(state),
-        totalMs: totalMs(state),
-      });
+      broadcastState();
     });
 
-    // IPC: renderer asks for reset
     ipcMain.on("reset", () => {
-      state = { date: todayStr(), sessions: [] };
-      saveState(state);
-      win?.webContents.send("state-update", {
-        running: isRunning(state),
-        totalMs: totalMs(state),
-      });
+      state = resetTimer(state);
+      broadcastState();
     });
 
-    // Global hotkey: Ctrl+Alt+R → reset timer
-    globalShortcut.register("CommandOrControl+Alt+R", () => {
-      state = { date: todayStr(), sessions: [] };
-      saveState(state);
-      win?.webContents.send("state-update", {
-        running: isRunning(state),
-        totalMs: totalMs(state),
-      });
-    });
-
-    // IPC: renderer requests current state
-    ipcMain.on("get-state", () => {
-      win?.webContents.send("state-update", {
-        running: isRunning(state),
-        totalMs: totalMs(state),
-      });
-    });
+    ipcMain.on("get-state", broadcastState);
   });
 
   app.on("will-quit", () => {
@@ -216,6 +258,6 @@ if (!gotTheLock) {
   });
 
   app.on("window-all-closed", () => {
-    // keep app process alive even if window is closed/hidden
+    // Clocki stays alive when its overlay is hidden.
   });
 }
