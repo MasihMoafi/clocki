@@ -244,6 +244,16 @@
 
     document.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
+      const margin = 10;
+      // Do not initiate window repositioning if mouse is near window borders (resize zone)
+      if (
+        e.clientX < margin ||
+        e.clientX > window.innerWidth - margin ||
+        e.clientY < margin ||
+        e.clientY > window.innerHeight - margin
+      ) {
+        return;
+      }
       mouseDownAt = Date.now();
       startX = e.screenX;
       startY = e.screenY;
@@ -261,6 +271,7 @@
       startX = e.screenX;
       startY = e.screenY;
     });
+
 
     let clickTimer = null;
 
