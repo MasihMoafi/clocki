@@ -125,8 +125,9 @@ function broadcastState(): void {
     win.webContents.send("state-update", {
       running: isRunning(state),
       totalMs: totalMs(state),
-      theme: state.theme || "deusex",
+      theme: state.theme || "cyan",
       mode: state.mode || "timer",
+
     });
   }
 }
@@ -264,12 +265,12 @@ if (!gotTheLock) {
       x: windowState.x,
       y: windowState.y,
       frame: false,
-      transparent: false,
-      backgroundColor: "#08080A",
+      transparent: true,
+      backgroundColor: "#00000000",
       alwaysOnTop: true,
       resizable: true,
       skipTaskbar: false,
-      hasShadow: true,
+      hasShadow: false,
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
         nodeIntegration: false,
@@ -277,6 +278,9 @@ if (!gotTheLock) {
         sandbox: true,
       },
     });
+
+    win.setAspectRatio(90 / 32);
+
 
     win.setAlwaysOnTop(true, "screen-saver");
 

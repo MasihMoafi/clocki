@@ -69,10 +69,13 @@
       background: var(--bg);
       border: 1px solid var(--border-accent);
       clip-path: polygon(
-        8px 0, calc(100% - 8px) 0, 
-        100% 8px, 100% calc(100% - 8px), 
-        calc(100% - 8px) 100%, 8px 100%, 
-        0 calc(100% - 8px), 0 8px
+        12px 0, calc(100% - 12px) 0, 
+        100% 12px, 100% calc(50% - 6px),
+        calc(100% - 3px) 50%, 100% calc(50% + 6px),
+        100% calc(100% - 12px), calc(100% - 12px) 100%, 
+        12px 100%, 0 calc(100% - 12px),
+        0 calc(50% + 6px), 3px 50%, 0 calc(50% - 6px),
+        0 12px
       );
       display: flex;
       align-items: center;
@@ -85,7 +88,7 @@
 
     .container.running {
       border-color: var(--border-accent);
-      box-shadow: 0 0 10px var(--shadow-glow), inset 0 0 14px var(--shadow-glow);
+      box-shadow: 0 0 14px var(--shadow-glow), inset 0 0 16px var(--shadow-glow);
     }
 
     .container.paused {
@@ -93,17 +96,17 @@
       opacity: 0.88;
     }
 
-    /* Inner Bevel Border */
+    /* Inner Bevel Border & Cyber Armor Panels */
     .inner-frame {
       position: absolute;
       inset: 2px;
       border: 1px solid var(--border-accent);
-      opacity: 0.4;
+      opacity: 0.5;
       clip-path: polygon(
-        6px 0, calc(100% - 6px) 0, 
-        100% 6px, 100% calc(100% - 6px), 
-        calc(100% - 6px) 100%, 6px 100%, 
-        0 calc(100% - 6px), 0 6px
+        10px 0, calc(100% - 10px) 0, 
+        100% 10px, 100% calc(100% - 10px), 
+        calc(100% - 10px) 100%, 10px 100%, 
+        0 calc(100% - 10px), 0 10px
       );
       pointer-events: none;
     }
@@ -111,15 +114,16 @@
     /* Status dot indicator */
     .status-dot {
       position: absolute;
-      top: 3px;
-      right: 6px;
-      width: 4px;
-      height: 4px;
+      top: 4px;
+      right: 8px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: var(--border-accent);
-      box-shadow: 0 0 5px var(--text-glow);
+      box-shadow: 0 0 6px var(--text-glow);
       display: none;
     }
+
 
     body.large-view .status-dot {
       display: block;
@@ -159,13 +163,13 @@
     }
   </style>
 </head>
-<body class="theme-deusex">
+<body class="theme-cyan">
   <div class="container paused" id="container">
     <div class="inner-frame"></div>
-    <div class="status-dot"></div>
     <div class="scanline"></div>
     <span class="time" id="time">0.00h</span>
   </div>
+
 
   <script>
     const container = document.getElementById('container');
