@@ -169,12 +169,6 @@
     ipcRenderer.send('get-state');
     setInterval(() => ipcRenderer.send('get-state'), 60_000);
 
-    // Middle-click opens support (QR / address)
-    document.addEventListener('auxclick', (e) => {
-      if (e.button === 1) {
-        ipcRenderer.send('open-support');
-      }
-    });
   </script>
 </body>
 </html>

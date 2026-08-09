@@ -66,18 +66,4 @@ You can reset the timer at any time using any of the following methods:
 
 MIT © [Masih Moafi](https://github.com/masihmoafi)
 
----
-
-## Support / Buy me a coffee
-
-If you'd like to support Clocki, you can send Solana (SOL) to the public address below. Public addresses and QR codes are safe to share — never commit or share private keys.
-
-<p align="center">
-  <img src="assets/sol.webp" alt="Solana QR" width="160" />
-</p>
-
-```
-22xpLshLqecFBLx9NjvRZaitHYVH8xZXgW9TQwDFnm98
-```
-
-In the app: press Ctrl+Alt+S (or Command+Alt+S on macOS) or middle-click the overlay to open the QR image in your default image viewer/wallet app.
+-
