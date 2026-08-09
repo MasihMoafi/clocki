@@ -218,6 +218,10 @@ if (!gotTheLock) {
     ipcMain.on("hide", () => win?.hide());
     ipcMain.on("context-menu", showContextMenu);
 
+    win.on("closed", () => {
+      win = null;
+    });
+
     win.loadFile(path.join(__dirname, "../src/overlay.html"));
 
     win.webContents.on("did-finish-load", broadcastState);
@@ -228,7 +232,7 @@ if (!gotTheLock) {
     });
 
     globalShortcut.register("CommandOrControl+Alt+H", () => {
-      if (!win) return;
+      if (!win || win.isDestroyed()) return;
       if (win.isVisible()) {
         win.hide();
       } else {
@@ -260,6 +264,7 @@ if (!gotTheLock) {
   });
 
   app.on("window-all-closed", () => {
-    // Clocki stays alive when its overlay is hidden.
+    app.quit();
   });
 }
+
