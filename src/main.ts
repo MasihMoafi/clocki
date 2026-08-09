@@ -111,10 +111,12 @@ let win: BrowserWindow | null = null;
 let state: State = loadState();
 
 function broadcastState(): void {
-  win?.webContents.send("state-update", {
-    running: isRunning(state),
-    totalMs: totalMs(state),
-  });
+  if (win && !win.isDestroyed()) {
+    win.webContents.send("state-update", {
+      running: isRunning(state),
+      totalMs: totalMs(state),
+    });
+  }
 }
 
 function visiblePosition(position?: WindowPosition): WindowPosition {
