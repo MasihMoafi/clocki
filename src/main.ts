@@ -100,6 +100,12 @@ function toggleTimer(state: State): State {
   return state;
 }
 
+function toggleMode(state: State): State {
+  state.mode = (state.mode || "timer") === "clock" ? "timer" : "clock";
+  saveState(state);
+  return state;
+}
+
 function resetTimer(state: State): State {
   const reset: State = {
     date: todayStr(),
@@ -127,27 +133,48 @@ function broadcastState(): void {
       totalMs: totalMs(state),
       theme: state.theme || "cyan",
       mode: state.mode || "timer",
-
     });
   }
 }
 
 function visiblePosition(position?: WindowState): WindowState {
   const defaultSize = { width: 90, height: 32 };
-  if (!position) return { x: 0, y: 0, ...defaultSize };
+  const width = position?.width && position.width > 0 ? position.width : defaultSize.width;
+  const height = position?.height && position.height > 0 ? position.height : defaultSize.height;
 
-  const visible = screen.getAllDisplays().some(({ workArea }) => {
-    return (
-      position.x >= workArea.x - 65 &&
-      position.x < workArea.x + workArea.width &&
-      position.y >= workArea.y - 23 &&
-      position.y < workArea.y + workArea.height
-    );
-  });
+  const displays = screen.getAllDisplays();
+  if (displays.length === 0) {
+    return { x: 0, y: 0, width, height };
+  }
 
-  return visible
-    ? { ...defaultSize, ...position }
-    : { x: 0, y: 0, ...defaultSize };
+  const primary = screen.getPrimaryDisplay();
+
+  if (!position || typeof position.x !== "number" || typeof position.y !== "number") {
+    const { workArea } = primary || displays[0];
+    return {
+      x: workArea.x + Math.max(0, workArea.width - width - 20),
+      y: workArea.y + 20,
+      width,
+      height,
+    };
+  }
+
+  const targetRect = { x: position.x, y: position.y, width, height };
+  const matchedDisplay = screen.getDisplayMatching(targetRect) || primary || displays[0];
+  const { workArea } = matchedDisplay;
+
+  const maxX = workArea.x + Math.max(0, workArea.width - width);
+  const maxY = workArea.y + Math.max(0, workArea.height - height);
+
+  const clampedX = Math.min(Math.max(position.x, workArea.x), maxX);
+  const clampedY = Math.min(Math.max(position.y, workArea.y), maxY);
+
+  return {
+    x: clampedX,
+    y: clampedY,
+    width,
+    height,
+  };
 }
 
 function showContextMenu(): void {
@@ -318,28 +345,62 @@ if (!gotTheLock) {
 
     win.webContents.on("did-finish-load", broadcastState);
 
-    globalShortcut.register("CommandOrControl+Alt+C", () => {
-      state = toggleTimer(state);
-      broadcastState();
-    });
+    const shortcuts: [string, () => void][] = [
+      [
+        "CommandOrControl+Alt+T",
+        () => {
+          state = toggleTimer(state);
+          broadcastState();
+        },
+      ],
+      [
+        "CommandOrControl+Alt+C",
+        () => {
+          state = toggleMode(state);
+          broadcastState();
+        },
+      ],
+      [
+        "CommandOrControl+Alt+R",
+        () => {
+          state = resetTimer(state);
+          broadcastState();
+        },
+      ],
+      [
+        "CommandOrControl+Alt+H",
+        () => {
+          if (!win || win.isDestroyed()) return;
+          if (win.isVisible()) {
+            win.hide();
+          } else {
+            if (win.isMinimized()) win.restore();
+            win.show();
+          }
+        },
+      ],
+    ];
 
-    globalShortcut.register("CommandOrControl+Alt+H", () => {
-      if (!win || win.isDestroyed()) return;
-      if (win.isVisible()) {
-        win.hide();
-      } else {
-        if (win.isMinimized()) win.restore();
-        win.show();
+    for (const [accelerator, callback] of shortcuts) {
+      const registered = globalShortcut.register(accelerator, callback);
+      if (!registered) {
+        console.warn(`Failed to register global shortcut: ${accelerator}`);
       }
-    });
-
-    globalShortcut.register("CommandOrControl+Alt+R", () => {
-      state = resetTimer(state);
-      broadcastState();
-    });
+    }
 
     ipcMain.on("toggle", () => {
       state = toggleTimer(state);
+      broadcastState();
+    });
+
+    ipcMain.on("toggle-mode", () => {
+      state = toggleMode(state);
+      broadcastState();
+    });
+
+    ipcMain.on("set-mode", (_, mode: Mode) => {
+      state.mode = mode;
+      saveState(state);
       broadcastState();
     });
 

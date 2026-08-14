@@ -28,9 +28,10 @@
   - **Right click**: Pause / Reset / Hide / Quit menu.
   - **Drag**: Reposition; Clocki remembers where you left it.
 - **Global hotkeys**:
-  - `Ctrl+Alt+C`: Pause / Resume.
-  - `Ctrl+Alt+H`: Show / Hide.
-  - `Ctrl+Alt+R`: Reset.
+  - `Ctrl+Alt+T`: Pause / Resume timer.
+  - `Ctrl+Alt+C`: Switch display mode (Timer / Clock).
+  - `Ctrl+Alt+R`: Reset active timer session.
+  - `Ctrl+Alt+H`: Show / Hide overlay.
 - **Persistence**: Session history and window position survive restarts.
 - **Daily reset**: Focus time automatically starts fresh each day.
 - **Offline UI**: No remote font or web dependency.

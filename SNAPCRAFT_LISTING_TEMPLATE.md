@@ -34,9 +34,10 @@ Clocki is a tiny, frameless, always-on-top desktop focus timer and HUD clock ove
   - **Left Click**: Pause / Resume.
   - **Double Click**: Reset focus timer to `0.00h`.
   - **Right Click**: Open theme selector, mode switcher, hide, or quit menu.
-  - **Ctrl+Alt+C**: Global hotkey to Pause / Resume.
-  - **Ctrl+Alt+H**: Global hotkey to Show / Hide.
-  - **Ctrl+Alt+R**: Global hotkey to Reset.
+  - **Ctrl+Alt+T**: Global hotkey to Pause / Resume timer.
+  - **Ctrl+Alt+C**: Global hotkey to Toggle Clock / Timer mode.
+  - **Ctrl+Alt+R**: Global hotkey to Reset active session.
+  - **Ctrl+Alt+H**: Global hotkey to Show / Hide overlay.
 - **Automatic Persistence**: Daily focus time, active theme, and window positions survive system restarts.
 ```
 

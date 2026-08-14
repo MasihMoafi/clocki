@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld("clocki", {
   },
 
   toggle: () => ipcRenderer.send("toggle"),
+  toggleMode: () => ipcRenderer.send("toggle-mode"),
+  setMode: (mode: string) => ipcRenderer.send("set-mode", mode),
   reset: () => ipcRenderer.send("reset"),
   hide: () => ipcRenderer.send("hide"),
   setTheme: (theme: string) => ipcRenderer.send("set-theme", theme),
