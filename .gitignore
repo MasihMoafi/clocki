@@ -4,3 +4,5 @@ dist/
 *.log
 VISION.md
 
+# Private notes, kept locally
+/AGENTS.md
