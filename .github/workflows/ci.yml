@@ -20,11 +20,14 @@ jobs:
         with:
           name: clocki-snap
           path: release/*.snap
+      - name: Locate the built snap
+        id: snap
+        run: echo "path=$(ls release/*.snap)" >> "$GITHUB_OUTPUT"
       - name: Publish to Snap Store
         if: github.ref == 'refs/heads/main'
         uses: canonical/action-publish@v1
         with:
-          snap: release/clocki_1.1.0_amd64.snap
+          snap: ${{ steps.snap.outputs.path }}
           release: stable
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
