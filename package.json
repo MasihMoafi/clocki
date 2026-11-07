@@ -1,6 +1,6 @@
 {
   "name": "clocki",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Minimal floating work timer overlay",
   "author": {
     "name": "Masih Moafi",
@@ -19,7 +19,8 @@
     "start": "electron dist/main.js",
     "snap": "npm run build && electron-builder --linux snap --publish never",
     "reset": "electron dist/main.js --reset",
-    "dist": "npm run build && electron-builder --linux snap AppImage deb --publish never"
+    "dist": "npm run build && electron-builder --linux snap AppImage deb --publish never",
+    "test": "node --experimental-strip-types --test test/day.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

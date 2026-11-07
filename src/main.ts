@@ -9,6 +9,7 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import { localDate, rollover } from "./day";
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("enable-features", "GlobalShortcutsPortal");
@@ -64,17 +65,14 @@ function resolveStateFile(): string {
 const STATE_FILE = resolveStateFile();
 
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDate();
 }
 
 function loadState(): State {
   try {
     if (fs.existsSync(STATE_FILE)) {
       const raw = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) as State;
-      if (raw.date !== todayStr()) {
-        return { date: todayStr(), sessions: [], window: raw.window, theme: raw.theme };
-      }
-      return raw;
+      return rollover(raw);
     }
   } catch (_) {}
   return { date: todayStr(), sessions: [] };
@@ -287,6 +285,16 @@ if (!gotTheLock) {
   }
 
   app.whenReady().then(() => {
+    // A new local day starts the count at zero, even while Clocki stays open overnight.
+    setInterval(() => {
+      const next = rollover(state);
+      if (next !== state) {
+        state = next;
+        saveState(state);
+        broadcastState();
+      }
+    }, 30_000);
+
     const windowState = visiblePosition(state.window);
 
     win = new BrowserWindow({
