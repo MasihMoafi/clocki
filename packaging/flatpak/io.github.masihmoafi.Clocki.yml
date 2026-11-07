@@ -22,7 +22,6 @@ modules:
         only-arches: [x86_64]
       - type: git
         url: https://github.com/MasihMoafi/clocki.git
-        branch: main
         commit: 130015250e7d8b4f3e5cb401e8c29ab487b51138
         dest: src
       - type: script
