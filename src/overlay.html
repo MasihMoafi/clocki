@@ -163,7 +163,7 @@
     }
   </style>
 </head>
-<body class="theme-cyan">
+<body class="theme-bw">
   <div class="container paused" id="container">
     <div class="inner-frame"></div>
     <div class="scanline"></div>
@@ -225,7 +225,7 @@
       baseTotalMs = data.totalMs;
       currentMode = data.mode || 'timer';
       sessionStart = running ? Date.now() : null;
-      document.body.className = 'theme-' + (data.theme || 'deusex');
+      document.body.className = 'theme-' + (data.theme || 'bw');
       checkSizeClass();
       container.className = 'container ' + (running ? 'running' : 'paused');
       renderTime();

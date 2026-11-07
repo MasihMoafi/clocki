@@ -14,18 +14,17 @@ files:
 linux:
   target:
     - snap
+    - AppImage
+    - deb
   icon: assets/icon.png
   category: Utility
   synopsis: Minimal floating focus timer
   description: A tiny always-on-top timer overlay for tracking daily focus hours.
   executableName: clocki
+  # "Always on top" needs X11 (XWayland); Electron picks Wayland otherwise.
+  executableArgs: ["--ozone-platform=x11"]
 
 snap:
   confinement: strict
   grade: stable
-
-
-
-
-
-
+  executableArgs: ["--ozone-platform=x11"]

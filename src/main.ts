@@ -21,6 +21,8 @@ interface Session {
 
 export type Theme = "deusex" | "cyan" | "red" | "purple" | "bw";
 
+const DEFAULT_THEME: Theme = "bw";
+
 interface WindowState {
   x: number;
   y: number;
@@ -70,7 +72,7 @@ function loadState(): State {
     if (fs.existsSync(STATE_FILE)) {
       const raw = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) as State;
       if (raw.date !== todayStr()) {
-        return { date: todayStr(), sessions: [], window: raw.window };
+        return { date: todayStr(), sessions: [], window: raw.window, theme: raw.theme };
       }
       return raw;
     }
@@ -111,6 +113,7 @@ function resetTimer(state: State): State {
     date: todayStr(),
     sessions: [],
     window: state.window,
+    theme: state.theme,
   };
   saveState(reset);
   return reset;
@@ -131,16 +134,19 @@ function broadcastState(): void {
     win.webContents.send("state-update", {
       running: isRunning(state),
       totalMs: totalMs(state),
-      theme: state.theme || "cyan",
+      theme: state.theme || DEFAULT_THEME,
       mode: state.mode || "timer",
     });
   }
 }
 
+// 5x the default size: an always-on-top overlay must not be resizable to full screen
+const MAX_SIZE = { width: 450, height: 160 };
+
 function visiblePosition(position?: WindowState): WindowState {
   const defaultSize = { width: 90, height: 32 };
-  const width = position?.width && position.width > 0 ? position.width : defaultSize.width;
-  const height = position?.height && position.height > 0 ? position.height : defaultSize.height;
+  const width = position?.width && position.width > 0 ? Math.min(position.width, MAX_SIZE.width) : defaultSize.width;
+  const height = position?.height && position.height > 0 ? Math.min(position.height, MAX_SIZE.height) : defaultSize.height;
 
   const displays = screen.getAllDisplays();
   if (displays.length === 0) {
@@ -242,7 +248,7 @@ function showContextMenu(): void {
       submenu: themes.map((t) => ({
         label: t.label,
         type: "radio",
-        checked: (state.theme || "deusex") === t.id,
+        checked: (state.theme || DEFAULT_THEME) === t.id,
         click: () => {
           state.theme = t.id;
           saveState(state);
@@ -289,6 +295,10 @@ if (!gotTheLock) {
       height: windowState.height || 32,
       minWidth: 60,
       minHeight: 22,
+      maxWidth: MAX_SIZE.width,
+      maxHeight: MAX_SIZE.height,
+      maximizable: false,
+      fullscreenable: false,
       x: windowState.x,
       y: windowState.y,
       frame: false,
