@@ -1,0 +1,23 @@
+# Maintainer: Masih Moafi <hi@masihmoafi.com>
+pkgname=clocki-bin
+_appname=clocki
+pkgver=1.2.1
+pkgrel=1
+pkgdesc='Minimal always-on-top focus timer and clock overlay'
+arch=('x86_64')
+url='https://github.com/MasihMoafi/clocki'
+license=('MIT')
+depends=('gtk3' 'nss' 'alsa-lib' 'libxss' 'libxtst' 'xdg-utils' 'libnotify' 'at-spi2-core' 'libsecret')
+provides=('clocki')
+conflicts=('clocki')
+options=('!strip' '!debug')
+source=("${_appname}_${pkgver}_amd64.deb::https://github.com/MasihMoafi/clocki/releases/download/v${pkgver}/${_appname}_${pkgver}_amd64.deb")
+sha256sums=('036ed7ccf0eee0142d99d62b715f33a2a5a62863ba95063ff55447fadaf05762')
+
+package() {
+  bsdtar -xf data.tar.* -C "$pkgdir"
+  chmod 4755 "$pkgdir/opt/Clocki/chrome-sandbox"
+  install -dm755 "$pkgdir/usr/bin"
+  ln -sf "/opt/Clocki/${_appname}" "$pkgdir/usr/bin/${_appname}"
+  install -Dm644 "$pkgdir/opt/Clocki/LICENSE.electron.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.electron.txt"
+}

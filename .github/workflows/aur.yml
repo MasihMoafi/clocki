@@ -1,0 +1,31 @@
+name: AUR package check
+
+# Builds packaging/aur/PKGBUILD in a clean Arch container, lints it, and uploads the .SRCINFO the AUR needs.
+on:
+  push:
+    paths: ['packaging/aur/**', '.github/workflows/aur.yml']
+  workflow_dispatch:
+
+jobs:
+  aur:
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: pacman -Syu --noconfirm --needed base-devel namcap
+      - name: Build as a normal user
+        run: |
+          pacman -S --noconfirm --needed $(bash -c "source packaging/aur/PKGBUILD; echo \${depends[@]}")
+          useradd -m builder
+          cp -r packaging/aur /home/builder/pkg && chown -R builder /home/builder/pkg
+          su builder -c 'cd ~/pkg && makepkg --printsrcinfo > .SRCINFO && makepkg --noconfirm --skippgpcheck'
+          namcap /home/builder/pkg/PKGBUILD /home/builder/pkg/*.pkg.tar.zst || true
+          pacman -U --noconfirm /home/builder/pkg/*.pkg.tar.zst
+          test -x /usr/bin/clocki && test -f /usr/share/applications/clocki.desktop
+          cp /home/builder/pkg/.SRCINFO packaging/aur/.SRCINFO
+      - uses: actions/upload-artifact@v4
+        with:
+          name: srcinfo
+          path: packaging/aur/.SRCINFO
+          include-hidden-files: true

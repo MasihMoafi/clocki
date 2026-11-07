@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Clocki
+Comment=Tiny always-on-top focus timer and clock
+Exec=clocki
+Icon=io.github.masihmoafi.Clocki
+Terminal=false
+Categories=Utility;Clock;
+Keywords=timer;focus;pomodoro;clock;overlay;
+StartupWMClass=clocki

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.masihmoafi.Clocki</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Clocki</name>
+  <summary>Tiny always-on-top focus timer and clock</summary>
+  <developer id="io.github.masihmoafi">
+    <name>Masih Moafi</name>
+  </developer>
+  <description>
+    <p>Clocki is a small frameless overlay that stays above your windows and counts the hours you focus today. The count starts again at local midnight.</p>
+    <ul>
+      <li>Click to pause or resume, double-click to reset</li>
+      <li>Switch between the focus timer and a clock</li>
+      <li>Five color themes</li>
+      <li>Global shortcuts: Ctrl+Alt+T pause, Ctrl+Alt+C clock, Ctrl+Alt+R reset, Ctrl+Alt+H hide</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.masihmoafi.Clocki.desktop</launchable>
+  <url type="homepage">https://github.com/MasihMoafi/clocki</url>
+  <url type="bugtracker">https://github.com/MasihMoafi/clocki/issues</url>
+  <url type="vcs-browser">https://github.com/MasihMoafi/clocki</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/MasihMoafi/clocki/main/assets/preview.png</image>
+      <caption>The focus timer overlay</caption>
+    </screenshot>
+  </screenshots>
+  <branding>
+    <color type="primary" scheme_preference="light">#e6e6e6</color>
+    <color type="primary" scheme_preference="dark">#111111</color>
+  </branding>
+  <content_rating type="oars-1.1"/>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <releases>
+    <release version="1.2.1" date="2026-11-07">
+      <description><p>The day follows local time and starts again at midnight while Clocki stays open.</p></description>
+    </release>
+    <release version="1.2.0" date="2026-11-07">
+      <description><p>Black-and-white default theme, size cap, global shortcuts; stays on top under Wayland.</p></description>
+    </release>
+  </releases>
+</component>
