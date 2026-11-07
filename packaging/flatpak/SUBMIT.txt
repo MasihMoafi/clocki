@@ -1,0 +1,23 @@
+Clocki on Flathub: what you do (about 5 minutes, by hand; Flathub forbids AI-made submissions)
+
+1. Fork https://github.com/flathub/flathub (untick "Copy the main branch only").
+2. In your fork, create a branch from `new-pr`, e.g. `pin`.
+3. Add one file at the top level: io.github.masihmoafi.Clocki.yml
+   (copy it from ~/Desktop/p/clocki/packaging/flatpak/io.github.masihmoafi.Clocki.yml).
+4. Open a pull request against flathub/flathub, base branch `new-pr`, title: Add io.github.masihmoafi.Clocki
+5. Fill their checklist honestly. Text you can use or change:
+
+Description:
+Clocki is a tiny always-on-top focus timer and clock overlay. It counts the hours you focus each day and
+resets at local midnight. Electron app, X11 (XWayland) because staying on top is not possible for native
+Wayland clients.
+
+AI disclosure:
+Most of the application code and the Flatpak packaging were written with AI coding assistants
+(Claude, Codex) under my direction; I reviewed, tested and maintain it.
+
+Video: record ~20 seconds of the Flatpak running (GNOME screen recorder: Ctrl+Shift+Alt+R).
+  Install the test build first: Actions -> "Flatpak check" -> latest run -> artifact clocki-x86_64.flatpak,
+  then: flatpak install --user clocki-x86_64.flatpak
+
+Clocki has history since August 2026 and is on the Snap Store, which helps with Flathub's history rule.

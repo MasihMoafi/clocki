@@ -1,0 +1,25 @@
+name: Flatpak check
+
+# Builds the Flathub manifest with Flathub's own tooling and runs its linter, before any Flathub submission.
+on:
+  push:
+    paths: ['packaging/flatpak/**', '.github/workflows/flatpak.yml']
+  workflow_dispatch:
+
+jobs:
+  flatpak:
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: flathub-infra/flatpak-github-actions/flatpak-builder@master
+        with:
+          bundle: clocki.flatpak
+          manifest-path: packaging/flatpak/io.github.masihmoafi.Clocki.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+      - name: Flathub linter (manifest)
+        run: |
+          flatpak install -y --noninteractive flathub org.flatpak.Builder
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flatpak/io.github.masihmoafi.Clocki.yml
