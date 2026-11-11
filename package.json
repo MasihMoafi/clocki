@@ -20,7 +20,7 @@
     "snap": "npm run build && electron-builder --linux snap --publish never",
     "reset": "electron dist/main.js --reset",
     "dist": "npm run build && electron-builder --linux snap AppImage deb --publish never",
-    "test": "node --experimental-strip-types --test test/day.test.ts"
+    "test": "node --experimental-strip-types --test test/day.test.ts test/shared-system.test.mts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
